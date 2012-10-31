@@ -1,0 +1,174 @@
+/* This is the stylesheet for the interactive api docs
+ *
+ * note: iad stands for interactive-api-docs */
+
+.iad-group-header {
+    clear: both;
+}
+
+.iad-resource {
+    clear: both;
+    padding-bottom: 25px;
+}
+
+.iad-resource-header {
+    padding-top: 0px;
+    padding-bottom: 0px;
+    clear: both;
+}
+
+.iad-resource-description {
+    margin-bottom: 10px;
+    color: #4D4D4D;
+    font-size: 12px;
+}
+
+.iad-method {
+    clear: both;
+    border: 1px solid #CCCCCC;
+}
+
+.iad-method-header {
+    clear: both;
+    height: 25px;
+    padding: 10px;
+    background-image: url(../img/interactive_api_docs/grey-shade.jpg);
+    color: #4D4D4D;
+    font-weight: bold;
+    text-shadow: none;
+}
+
+    .iad-method-header:hover {
+        cursor: pointer;
+    }
+
+.iad-method-selected .iad-method-header {
+    background-color: #4D4D4D;
+    background-image: none;
+    color: #CCCCCC; 
+}
+
+.iad-method-header .iad-http-method {
+    float: left;
+}
+
+.iad-method-header .iad-method-uri {
+    float: left;
+    padding-left: 10px;
+}
+
+.iad-method-header .iad-method-synopsis {
+    float: right;
+    margin-right: 10px;
+    color: $blue;
+}
+
+.iad-method-expand-image {
+    position: relative;
+    float: right;
+    top: -3px;
+    width: 30px;
+    height: 30px;
+    background-size: 30px 30px;
+    background-image: url(../img/interactive_api_docs/icons/matte-white-square-plus-small.png);
+}
+
+    .iad-method-selected .iad-method-expand-image {
+        background-image: url(../img/interactive_api_docs/icons/matte-white-square-minus-small.png);
+    }
+
+.iad-method-body {
+    clear: both;
+    padding: 10px;
+    font-size: 13px;
+    padding-bottom: 20px;
+}
+
+    .iad-method-body table {
+        border-collapse: collapse;
+    }
+
+        .iad-method-body table td{
+            padding-bottom: 5px;
+            vertical-align: top;
+        }
+            .iad-method-body table tbody td{
+                border-top: 1px solid #CCCCCC;
+                padding-top: 10px;
+            }
+
+        .iad-method-body table input {
+            width: 70px;
+        }
+
+.iad-method-description {
+    padding: 10px;
+}
+
+.iad-param-name {
+    font-size: 15px;
+    width: 150px;
+}
+
+.iad-param-input {
+    width: 100px;
+}
+
+.iad-param-description {
+    font-size: 15px;
+    width: 600px;
+}
+
+.iad-required-param {
+    font-weight: bold;
+}
+
+.iad-param-type {
+    font-size: 11px;
+}
+
+.iad-method-ajax {
+    padding: 10px;
+}
+
+.iad-label {
+    font-size: 1.2em;
+    line-height: 1.4em;
+    color: #4D4D4D;
+    font-weight: bold; 
+}
+
+.iad-big-txt {
+    font-size: 1.2em;
+}
+
+.iad-method-request-uri,
+.iad-method-request-header,
+.iad-method-response-header,
+.iad-method-response-body,
+.iad-method-request-body {
+    border: 1px solid #CCCCCC;
+    padding: 10px;
+    overflow: auto;
+}
+
+pre .string {
+    color: green;
+}
+
+pre .number {
+    color: red;
+}
+
+pre .boolean {
+    color: blue;
+}
+
+pre .null {
+    color: magenta;
+}
+
+#iad-expand-all:hover,
+#iad-collapse-all:hover {
+    cursor: pointer;
+}

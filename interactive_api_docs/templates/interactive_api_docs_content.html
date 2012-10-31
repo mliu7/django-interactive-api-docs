@@ -1,0 +1,134 @@
+<div>
+    {% if not request.user.is_authenticated %}
+        * You must be logged in to try out this API
+    {% endif %}
+</div>
+{% for group in spec.groups %}
+{% if request.user.is_staff or not group.is_private %}
+    <h2 class="iad-group-header">{{ group.name }}</h2>
+    {% with forloop.counter as group_number %}
+    {% for resource in group.resources %}
+        {% if request.user.is_staff or not resource.is_private %}
+        <div class="iad-resource">
+            <a name="{{ resource.name }}"></a>
+            <h3 class="iad-resource-header">{{ resource.name }}</h3>
+            <div class="iad-resource-description">
+                {{ resource.description|safe }}
+            </div>
+            {% with forloop.counter as resource_number %}
+            {% for method in resource.methods %}
+                {% with forloop.counter as method_number %}
+                <div id="{{ group_number }}-{{ resource_number }}-{{ method_number }}" uri="{{ method.URI }}" class="iad-method">
+                    <div class="iad-method-header">
+                        <div class="iad-http-method">
+                            {{ method.HTTP_method }}
+                        </div>
+                        <div class="iad-method-uri">
+                            {{ method.URI }}
+                        </div>
+                        <div class="iad-method-expand-image">
+                        </div>
+                        <div class="iad-method-synopsis">
+                            {% with method.synopsis|length as synopsis_length %}
+                                {% if method.URI|length|add:synopsis_length < 70 %}
+                                    {{ method.synopsis }} 
+                                {% endif %}
+                            {% endwith %}
+                        </div>
+                    </div>
+                    <div class="iad-method-body" style="display: none;">
+                        <div class="iad-method-description">
+                            {{ method.description|safe }}
+                        </div>
+                        <form method="{{ method.HTTP_method }}">
+                            <table>
+                                <thead class="light-grey-txt">
+                                    <tr>
+                                        <td>Parameter Name</td>
+                                        <td>Value</td>
+                                        <td>Description</td>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for param in method.parameters %}
+                                        <tr>
+                                            <td class="iad-param-name">
+                                                <span class="{% if param.required %}iad-required-param{% endif %}">
+                                                    {{ param.name }}
+                                                </span>
+                                            </td>
+                                            <td class="iad-param-input">
+                                                <input type="text" name="{{ param.name }}" value="{{ param.initial }}"/>
+                                            </td>
+                                            <td class="iad-param-description">
+                                                <div>{{ param.synopsis|safe }}</div>
+                                                <div class="iad-param-type">type: {{ param.type|safe }}</div>
+                                                {% if param.options %}
+                                                    <div class="iad-param-type">options: {{ param.options|safe }}</div>
+                                                {% endif %}
+                                                {% if param.default %}
+                                                    <div class="iad-param-type">default: {{ param.default|safe }}</div>
+                                                {% endif %}
+                                                {% if param.example %}
+                                                    <div class="iad-param-type">example: {{ param.example|safe }}</div>
+                                                {% endif %}
+                                                {% if param.examples %}
+                                                    <div class="iad-param-type">examples: {{ param.examples|safe }}</div>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                        <tr>
+                                            <td>
+                                                {% if method.HTTP_method == 'GET' %}
+                                                    <input type="hidden" name="access_token" value="{{ access_token }}"/>
+                                                {% endif %}
+                                            </td>
+                                            <td><button class="submit-request">Try it!</button></td>
+                                            <td></td>
+                                        </tr>
+                                </tbody>
+                            </table>
+                        </form>
+                        <div class="iad-method-ajax" style="display: none;">
+                            <div class="iad-method-request">
+                                <div>
+                                    <div class="iad-label">Request:</div>
+                                    <pre class="iad-method-request-uri"></pre>
+                                </div>
+                                <div>
+                                    <div class="iad-label">Request Headers (partial):</div>
+                                    <pre class="iad-method-request-header"></pre>
+                                </div>
+                                <div>
+                                    <div class="iad-label">Request Body:</div>
+                                    <pre class="iad-method-request-body"></pre>
+                                </div>
+                            </div>
+                            <div class="iad-method-response">
+                                <div>
+                                    <span class="iad-label">Response Code:</span>
+                                    <span class="iad-method-response-code iad-big-txt"></span> 
+                                </div>
+                                <div>
+                                    <div class="iad-label">Response Headers:</div>
+                                    <pre class="iad-method-response-header"></pre>
+                                </div>
+                                <div>
+                                    <div class="iad-label">Response Body:</div>
+                                    <pre class="iad-method-response-body"></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endwith %}
+            {% endfor %}
+            {% endwith %}
+        </div>
+    {% endif %}
+    {% endfor %}
+    {% endwith %}
+{% endif %}
+{% endfor %}
+

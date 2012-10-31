@@ -1,0 +1,17 @@
+<html>
+    <head>
+        <title>REST API Docs</title>
+        {% include "interactive_api_docs_css.html" %}
+    </head>
+    <body>
+        {% block content %}
+            {% include "interactive_api_docs_content.html" %}
+        {% endblock %}
+        {% block sidebar %}
+            {% include "interactive_api_docs_sidebar.html" %}
+        {% endblock %}
+        {% block extra-js %}
+            {% include "interactive_api_docs_js.html" %}
+        {% endblock %}
+    </body>
+</html>

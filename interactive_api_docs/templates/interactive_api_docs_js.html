@@ -1,0 +1,284 @@
+<script src="{{ STATIC_URL }}js/jquery-1.7.1.min.js" type="text/javascript"></script>
+<script src="{{ STATIC_URL }}js/jquery.form.js" type="text/javascript"></script>
+<script src="{{ STATIC_URL }}js/json2.js" type="text/javascript"></script>
+<script type="text/javascript">
+    var statusCodeMeaning = {100: 'Continue',
+                             101: 'Switching Protocols',
+                             102: 'Processing',
+                             103: 'Checkpoint',
+                             122: 'Request-URI too long',
+                             200: 'OK',
+                             201: 'Created',
+                             202: 'Accepted',
+                             203: 'Non-Authoritative Information',
+                             204: 'No Content',
+                             205: 'Reset Content',
+                             206: 'Partial Content',
+                             207: 'Multi-Status',
+                             208: 'Already Reported',
+                             226: 'IM Used',
+                             300: 'Multiple Choices',
+                             301: 'Moved Permanently',
+                             302: 'Found',
+                             303: 'See Other',
+                             304: 'Not Modified',
+                             305: 'Use Proxy',
+                             306: 'Switch Proxy',
+                             307: 'Temporary Redirect',
+                             308: 'Resume Incomplete',
+                             400: 'Bad Request',
+                             401: 'Unauthorized',
+                             402: 'Payment Required',
+                             403: 'Forbidden',
+                             404: 'Not Found',
+                             405: 'Method Not Allowed',
+                             406: 'Not Acceptable',
+                             407: 'Proxy Authentication Required',
+                             408: 'Request Timeout',
+                             409: 'Conflict',
+                             410: 'Gone',
+                             411: 'Length Required',
+                             412: 'Precondition Failed',
+                             413: 'Request Entity Too Large',
+                             414: 'Request-URI Too Long',
+                             415: 'Unsupported Media Type',
+                             416: 'Request Range Not Satisfiable',
+                             417: 'Expectation Failed',
+                             418: "I'm a teapot",
+                             422: 'Unprocessable Entity',
+                             423: 'Locked',
+                             424: 'Failed Dependency',
+                             425: 'Unordered Collection',
+                             426: 'Upgrade Required',
+                             428: 'Precondition Required',
+                             429: 'Too Many Requests',
+                             431: 'Request Header Fields Too Large',
+                             444: 'No Response',
+                             449: 'Retry With',
+                             450: 'Blocked by Windows Parental Controls',
+                             499: 'Client Closed Request',
+                             500: 'Internal Server Error',
+                             501: 'Not Implemented',
+                             502: 'Bad Gateway',
+                             503: 'Service Unavailable',
+                             504: 'Gateway Timeout',
+                             505: 'HTTP Version Not Supported',
+                             506: 'Variant Also Negotiates',
+                             507: 'Insufficient Storage',
+                             508: 'Loop Detected',
+                             509: 'Bandwidth Limit Exceeded',
+                             510: 'Not Extended',
+                             511: 'Network Authentication Required',
+                             }
+
+    $.fn.serializeObject = function()
+    {
+        /* Taken from Stackoverflow and modified to remove any objects that were empty
+           http://stackoverflow.com/questions/1184624/serialize-form-to-json-with-jquery
+        */
+        var o = {};
+        var a = this.serializeArray();
+        $.each(a, function() {
+            if (this.value !== '') {
+                if (o[this.name] !== undefined) {
+                    if (!o[this.name].push) {
+                        o[this.name] = [o[this.name]];
+                    }
+                    o[this.name].push(this.value || '');
+                } else {
+                    o[this.name] = this.value || '';
+                }
+            }
+        });
+        return o;
+    };
+    serialize = function(obj) {
+    /* Serializes an arbitrary Javascript object. Taken from here:
+       http://stackoverflow.com/questions/1714786/querystring-encoding-of-a-javascript-object
+    */
+      var str = [];
+      for(var p in obj)
+         str.push(p + "=" + encodeURIComponent(obj[p]));
+      return str.join("&");
+    }
+    
+    $(function() {        
+        $('.iad-method-header').click(function() { //toggle the method's info
+            var method = $(this).parents('div.iad-method:first');
+            var methodBody = method.find('div.iad-method-body');
+            method.toggleClass('iad-method-selected');
+            methodBody.slideToggle('fast');
+        });
+
+        $('#iad-expand-all').click(expandAllMethods);
+        $('#iad-collapse-all').click(collapseAllMethods);
+
+        $('button.submit-request').click(function() { //hijack the regular submission to issue an ajax request
+            var method = $(this).parents('div.iad-method:first');
+            var form = $(this).parents('form:first');
+
+            // Get the URI to be called
+            var dataAndURI = createDataAndURI(form);
+
+            uri = dataAndURI['uri'];
+            data = dataAndURI['data'];
+
+            if (form.attr("method") == "GET" && serialize(data) !== "") {
+                // Manually encode the URL parameters
+                uri = uri + '?' + serialize(data);
+                contentType = "application/x-www-form-urlencoded";
+                data = {};
+            }
+            else {
+                contentType = "application/json";
+                data = JSON.stringify(data);
+            }
+
+            // Construct and execute the call
+            $.ajax({
+                url: uri,
+                dataType: "json",
+                data: data,
+                contentType: contentType,
+                type: form.attr("method"),
+                headers: {'Authorization': 'bearer ' + '{{ access_token }}'},
+                beforeSend: function(jqXHR, settings) {
+                    settings.accepts['json'] = "application/json";
+                    showRequest(jqXHR, settings, form);
+                },
+                complete: function(jqXHR, textStatus) {
+                    showResponse(jqXHR, textStatus, form);
+                }
+            });
+            return false; // Disable the standard form submission
+        });
+    });
+    function prettifyJSON(str) {
+        // Adds color to JSON. Taken from here: http://stackoverflow.com/questions/4810841/json-pretty-print-using-javascript
+        str = str.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+            var cls = 'number';
+            if (/^"/.test(match)) {
+                cls = 'string';
+            } else if (/true|false/.test(match)) {
+                cls = 'boolean';
+            } else if (/null/.test(match)) {
+                cls = 'null';
+            }
+            return '<span class="' + cls + '">' + match + '</span>';
+        });
+        return str;
+    }
+    function textToJSON(str) {
+        /* Takes text and returns a nicely formatted JSON object */
+        return prettifyJSON(JSON.stringify(str, undefined, 4));
+    }
+    function isJSONString(str) {
+        try {
+            jQuery.parseJSON(str);
+        } catch (e) {
+            return false;
+        }
+        return true;
+    }
+    function createDataAndURI(form) {
+        /* Takes a form selected by jQuery and returns the string of the base URI for the form.
+           It replaces any URI parameters with user entered values for those parameters */
+        var method = form.parents('div.iad-method:first');
+        var inputs = form.find('input');
+        var baseURI = method.attr('uri'); //get the url from the method info
+        var data={}
+        
+        for (var i=0; i < inputs.length; i++) { //for form field in the form
+            var input = inputs.eq(i);
+            var name = input.attr('name');
+            var nameWithBrackets = '{' + name + '}'; // get the name of the form field
+            var value = input.val(); // get the value of the form field
+            //if the name of the form field is in the sdfbase_uri, replace it with the value entered
+            if (baseURI.search(nameWithBrackets) >= 0) {
+                baseURI = baseURI.replace(new RegExp(nameWithBrackets), value);
+            }
+            else if (value !== '') {
+                data[name] = value;
+            }
+        }
+        uri = "{{ api_base_uri }}" + baseURI;
+        return {
+            'uri': uri,
+            'data': data,
+        }
+    }
+    function showRequest(jqXHR, settings, form) {
+        var method = form.parents('div.iad-method:first');
+
+        // Show the area where the request/response info will be displayed
+        var response = method.find('.iad-method-ajax:first');
+        response.show();
+
+        var dataAndURI = createDataAndURI(form);
+        data = dataAndURI['data'];
+        uri = dataAndURI['uri'];
+
+        if (settings['type'] == "GET") {
+            // Add the parameters right to the URL
+            uri = settings.url;
+
+            // Empty the data dict because it is specified in the URL
+            data = {};
+        }
+
+        // Display the URI that gets called
+        method.find('.iad-method-request-uri:first').html(uri);
+
+        // Display the Request Header
+        var requestHeader = "Content-Type: " + settings.contentType + '\n';
+        requestHeader += "Accept: " + settings.accepts[settings.dataType] + '\n';
+        authorizationHeader = settings.headers['Authorization']
+        if (authorizationHeader != undefined) {
+            requestHeader += 'Authorization: ' + authorizationHeader;
+        }
+        method.find('.iad-method-request-header:first').html(requestHeader);
+
+        // Display the JSON that is being sent
+        var jsonString = JSON.stringify(data, undefined, 4);
+        method.find('.iad-method-request-body:first').html(prettifyJSON(jsonString));
+    }
+    function showResponse(jqXHR, textStatus, form) {
+        var method = form.parents('div.iad-method:first');
+
+        // Display the Response Code
+        var statusString = jqXHR.status.toString() + ' ' + statusCodeMeaning[jqXHR.status];
+        method.find('.iad-method-response-code:first').empty().html(statusString);
+
+        // Display the Response Header
+        var responseHeader = jqXHR.getAllResponseHeaders(); 
+        method.find('.iad-method-response-header:first').empty().html(responseHeader);
+
+        // Display the Response Body
+        var response = jqXHR.responseText;
+        if (isJSONString(jqXHR.responseText) == true) {
+            response = textToJSON(jQuery.parseJSON(response));
+        }
+        method.find('.iad-method-response-body:first').empty().html(response);
+    }
+    function showMethod() {
+        var method = $(this).parents('div.iad-method:first');
+        var methodBody = method.find('div.iad-method-body');
+        method.toggleClass('iad-method-selected');
+        methodBody.slideToggle('fast');
+    }
+
+    function expandAllMethods() {
+        // Expands all resource methods on the entire page
+        $('.iad-method-body').show();
+        $('#iad-expand-all').hide();
+        $('#iad-collapse-all').show();
+        $('.iad-method').addClass('iad-method-selected');
+    }
+    function collapseAllMethods() {
+        // Collapses all resource methods on the entire page
+        $('.iad-method-body').hide()
+        $('#iad-collapse-all').hide();
+        $('#iad-expand-all').show();
+        $('.iad-method').removeClass('iad-method-selected');
+    }
+</script>

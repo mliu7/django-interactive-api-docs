@@ -1,0 +1,39 @@
+<div class="sidebar_container">
+    <div class="sidebar_header">
+        <div class="sidebar_header_txt">
+            <span class="white-heading-18">
+                REST API Resources 
+            </span>
+        </div>
+    </div>
+    <div class="sidebar_body_container">
+        <div class="sidebar_body">
+            <ul class="nested_sidebar_list">
+                {% for group in spec.groups %}
+                {% if request.user.is_staff or not group.is_private %}
+                    <li>
+                        {{ group.name }}
+                        <ul>
+                            {% for resource in group.resources %}
+                            {% if request.user.is_staff or not resource.is_private %}
+                                <li>
+                                    <a href="#{{ resource.name }}">{{ resource.name }}</a>
+                                </li>
+                            {% endif %}
+                            {% endfor %}
+                        </ul>
+                    </li>
+                {% endif %}
+                {% endfor %}
+            </ul>
+            <div>
+                <div id="iad-expand-all">
+                    <a>[+] Expand all methods</a>
+                </div>
+                <div id="iad-collapse-all" style="display: none;">
+                    <a>[-] Collapse all methods</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
