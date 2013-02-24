@@ -77,7 +77,6 @@ class Params(object):
         {'type': 'date',
          'type_detail': 'Date string. Form is YYYY-MM-DD',
          'example': '2012-01-23 represents Jan 23rd 2012'},
-        {'type': 'html',
         {'type': 'boolean',
          'type_detail': 'Boolean. Either True or False'},
         {'type': 'country',
